@@ -1,0 +1,12 @@
+[submodule "libraries/ESPAsyncWiFiManager"]
+	path = libraries/ESPAsyncWiFiManager
+	url = https://github.com/alanswx/ESPAsyncWiFiManager
+[submodule "libraries/ArduinoJson"]
+	path = libraries/ArduinoJson
+	url = https://github.com/bblanchon/ArduinoJson
+[submodule "libraries/ESPAsyncTCP"]
+	path = libraries/ESPAsyncTCP
+	url = https://github.com/me-no-dev/ESPAsyncTCP
+[submodule "libraries/ESPAsyncWebServer"]
+	path = libraries/ESPAsyncWebServer
+	url = https://github.com/me-no-dev/ESPAsyncWebServer
