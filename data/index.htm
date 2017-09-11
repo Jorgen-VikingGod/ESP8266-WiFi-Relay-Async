@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="author" content="Juergen Skrotzky, JorgenVikingGod@gmail.com">
+  <title>WiFi Relay</title>
+  <link rel="stylesheet" href="css/style.min.css">
+  <link rel="icon" href="images/atom196.png">
+</head>
+
+<body>
+  <header class="navbar navbar-inverse navbar-static-top" id="top" role="banner">
+    <div class="container">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="/">WiFi Relay</a>
+      </div>
+    </div>
+  </header>
+  <div class="container">
+    <form class="form-horizontal">
+      <div class="form-group">
+        <div class="col-sm-1 col-sm-offset-2">
+          <button type="button" class="btn btn-default">
+            <span class="glyphicon glyphicon-refresh" id="btnRefresh"></span>
+          </button>
+        </div>
+        <div class="col-sm-4">
+          <p id="status" class="form-control-static">Status</p>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-2 control-label">Relay 1</label>
+        <div class="col-sm-6">
+          <div class="btn-group btn-toggle" idx="1" role="group" aria-label="Relay 1">
+            <button type="button" class="btn btn-default" id="btnRelay1On" state="1">On</button>
+            <button type="button" class="btn btn-default" id="btnRelay1Off" state="0">Off</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-2 control-label">Relay 2</label>
+        <div class="col-sm-6">
+          <div class="btn-group btn-toggle" idx="2" role="group" aria-label="Relay 2">
+            <button type="button" class="btn btn-default" id="btnRelay2On" state="1">On</button>
+            <button type="button" class="btn btn-default" id="btnRelay2Off" state="0">Off</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-2 control-label">Relay 3</label>
+        <div class="col-sm-6">
+          <div class="btn-group btn-toggle" idx="3" role="group" aria-label="Relay 3">
+            <button type="button" class="btn btn-default" id="btnRelay3On" state="1">On</button>
+            <button type="button" class="btn btn-default" id="btnRelay3Off" state="0">Off</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <script src="js/scripts.js"></script>
+</body>
+</html>
