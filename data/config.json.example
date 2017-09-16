@@ -1,0 +1,25 @@
+{
+  "command": "configfile",
+  "bssid": "",
+  "ssid": "",
+  "wifimode": 0,
+  "wifipwd": "",
+  "hostname": "wifi-relay",
+  "adminpwd": "admin",
+  "relay1": {
+    "type": "1",
+    "pin": "14"
+  },
+  "relay2": {
+    "type": "1",
+    "pin": "12"
+  },
+  "relay3": {
+    "type": "1",
+    "pin": "13"
+  },
+  "relay4": {
+    "type": "1",
+    "pin": "15"
+  }
+}

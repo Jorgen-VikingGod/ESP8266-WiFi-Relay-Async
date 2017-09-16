@@ -15,19 +15,29 @@ d.parent(".dropdown-menu").length&&(d=d.closest("li.dropdown").addClass("active"
 // var urlBase = "http://192.168.1.24/"; // used when hosting the site somewhere other than the ESP8266 (handy for testing without waiting forever to upload to SPIFFS)
 var urlBase = ""; // used when hosting the site on the ESP8266
 
-var allData;
+$.extend({
+  jpost: function(url, body) {
+    return $.ajax({
+      type: 'POST',
+      url: url,
+      data: JSON.stringify(body),
+      contentType: "application/json",
+      dataType: 'json'
+    });
+  }
+});
 
-$(document).ready( function() {
+$(document).ready(function() {
   getAll();
 });
 
-$("#btnRefresh").click(function() {
+$('#btnRefresh').click(function() {
   getAll();
 });
 
 $('.btn-toggle').click(function() {
   var btnTgl = $(this);
-  var idx = btnTgl.attr('idx');
+  var id = btnTgl.attr('id');
   btnTgl.find('.btn').toggleClass('active');
   if (btnTgl.find('.btn-primary').length>0) {
   	btnTgl.find('.btn').toggleClass('btn-primary');
@@ -37,47 +47,57 @@ $('.btn-toggle').click(function() {
   btnTgl.find('.btn').each(function(idx,btn){
     var b = $(btn);
     if (b.hasClass('active')) {
-      console.log(b.attr('state'));
       state = b.attr('state');
     }
   });
-  setRelay(idx, state);
+  handleToggleButton(id, state);
 });
 
-function getAll() {
-  $.get(urlBase + "all", function(data) {
-    allData = data;
-    console.log(data);
-    $("#status").html("Connecting...");
-    updateRelayButtons(1, data.relay_1);
-    updateRelayButtons(2, data.relay_2);
-    updateRelayButtons(3, data.relay_3);
-    $("#status").html("Ready");
-  });
-}
-
-function updateRelayButtons(idx, value) {
-  if(value == 0) {
-    $("#btnRelay"+idx+"On").attr("class", "btn btn-default");
-    $("#btnRelay"+idx+"Off").attr("class", "btn btn-primary active");
+function handleToggleButton(id, state) {
+  if (id.includes('relay')) {
+    setRelay(id, state);
   } else {
-    $("#btnRelay"+idx+"On").attr("class", "btn btn-primary active");
-    $("#btnRelay"+idx+"Off").attr("class", "btn btn-default");
+    console.log(id);
   }
 }
 
-function setRelay(idx, value) {
-  $.post(urlBase + "relay_" + idx + "?value=" + value, function(data) {
+function updateToggleButton(id, state) {
+  if(state === 0) {
+    $('#'+id+'On').attr('class', 'btn btn-default');
+    $('#'+id+'Off').attr('class', 'btn btn-primary active');
+  } else {
+    $('#'+id+'On').attr('class', 'btn btn-primary active');
+    $('#'+id+'Off').attr('class', 'btn btn-default');
+  }
+}
+
+function getAll() {
+  $.get(urlBase + 'all', function(data) {
+    console.log(data);
+    $('#status').html('Connecting...');
+    updateToggleButton('relay1', data.relay1);
+    updateToggleButton('relay2', data.relay2);
+    updateToggleButton('relay3', data.relay3);
+    updateToggleButton('relay4', data.relay4);
+    $('#status').html('Ready');
+  });
+}
+
+function setRelay(id, value) {
+  $.post(urlBase + id + '?value=' + value, function(data) {
     console.log(data);
     var value = 0;
-    if (idx == 1)
-      value = data.relay_1;
-    else if (idx == 2)
-      value = data.relay_2;
-    else if (idx == 3)
-      value = data.relay_3;
-    updateRelayButtons(idx, value);
+    if (id == 'relay1')
+      value = data.relay1;
+    else if (id == 'relay2')
+      value = data.relay2;
+    else if (id == 'relay3')
+      value = data.relay3;
+    else if (id == 'relay4')
+      value = data.relay4;
+    updateToggleButton(id, value);
     var state = (value == 1 ? 'On' : 'Off');
-    $("#status").html("Set Relay " + idx + ": " + state);
+    $('#state').attr('style', 'display:block');
+    $('#state').html('Set ' + id + ': ' + state);
   });
 }
