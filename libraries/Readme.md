@@ -6,7 +6,6 @@
 |  ESPAsyncWebServer |  Sep 11th 2017 | N/A  | [source](https://github.com/me-no-dev/ESPAsyncWebServer)  | [a7db995](https://github.com/me-no-dev/ESPAsyncWebServer/commit/a7db995633990220d12401345805c203a94eb1a2)  |
 |  ESPAsyncTCP |  Sep 11th 2017 | N/A  | [source](https://github.com/me-no-dev/ESPAsyncTCP)  | [9b0cc37](https://github.com/me-no-dev/ESPAsyncTCP/commit/9b0cc37cd7bdf4b7d17a363141d2e988aa46652c)  |
 |  ArduinoJson |  Aug 30th 2017 | N/A  | [source](https://github.com/bblanchon/ArduinoJson)  | [57defe0](https://github.com/bblanchon/ArduinoJson/commit/57defe00ee5a311637495fe23398e7d026ead64b)  |
-|  ESPAsyncWiFiManager |  Aug 12th 2016 | N/A  | [source](https://github.com/alanswx/ESPAsyncWiFiManager)  | [6734c16](https://github.com/alanswx/ESPAsyncWiFiManager/commit/6734c16db040f2c6a340fe37a97717ea5773db52)  |
 
 # Installing ESP8266-WiFi-Relay-Async Arduino Libraries
 
