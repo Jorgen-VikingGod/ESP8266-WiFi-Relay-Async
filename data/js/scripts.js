@@ -54,11 +54,7 @@ $('.btn-toggle').click(function() {
 });
 
 function handleToggleButton(id, state) {
-  if (id.includes('relay')) {
-    setRelay(id, state);
-  } else {
-    console.log(id);
-  }
+  setMode(id, state);
 }
 
 function updateToggleButton(id, state) {
@@ -79,24 +75,25 @@ function getAll() {
     updateToggleButton('relay2', data.relay2);
     updateToggleButton('relay3', data.relay3);
     updateToggleButton('relay4', data.relay4);
+    updateToggleButton('relay5', data.relay5);
+    updateToggleButton('mask1', data.mask1);
+    updateToggleButton('mask2', data.mask2);
+    updateToggleButton('mask3', data.mask3);
     $('#status').html('Ready');
   });
 }
 
-function setRelay(id, value) {
+function setMode(id, value) {
   $.post(urlBase + id + '?value=' + value, function(data) {
-    console.log(data);
-    var value = 0;
-    if (id == 'relay1')
-      value = data.relay1;
-    else if (id == 'relay2')
-      value = data.relay2;
-    else if (id == 'relay3')
-      value = data.relay3;
-    else if (id == 'relay4')
-      value = data.relay4;
+    var value = data[id];
+    console.log(data, id, value);
     updateToggleButton(id, value);
-    var state = (value == 1 ? 'On' : 'Off');
+    var state = '';
+    if (id.includes('relay')) {
+      state = (value == 1 ? 'On' : 'Off');
+    } else if (id.includes('mask')) {
+      state = (value == 1 ? 'Open' : 'Close');
+    }
     $('#state').attr('style', 'display:block');
     $('#state').html('Set ' + id + ': ' + state);
   });

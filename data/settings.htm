@@ -138,7 +138,7 @@
                 </div>
               </div>
             </div><!-- row -->
-            <div class="row form-group">
+            <div class="row form-group" style="display:none" id="hideSSID">
               <div class="col-xs-3">
                 <label data-toggle="tooltip" title="WiFi Network's Name">SSID</label>
               </div>
@@ -221,12 +221,12 @@
                   <div class="col-xs-9">
                     <select class="form-control" id="relay1Pin">
                       <option value="0">GPIO-0 (D3)</option>
-                      <option value="2">GPIO-2 (D4)</option>
+                      <option selected="selected" value="2">GPIO-2 (D4)</option>
                       <option value="4">GPIO-4 (D2)</option>
                       <option value="5">GPIO-5 (D1)</option>
                       <option value="12">GPIO-12 (D6)</option>
                       <option value="13">GPIO-13 (D7)</option>
-                      <option selected="selected" value="14">GPIO-14 (D5)</option>
+                      <option value="14">GPIO-14 (D5)</option>
                       <option value="15">GPIO-15 (D8)</option>
                       <option value="16">GPIO-16 (D0)</option>
                     </select>
@@ -252,9 +252,9 @@
                       <option value="2">GPIO-2 (D4)</option>
                       <option value="4">GPIO-4 (D2)</option>
                       <option value="5">GPIO-5 (D1)</option>
-                      <option selected="selected" value="12">GPIO-12 (D6)</option>
+                      <option value="12">GPIO-12 (D6)</option>
                       <option value="13">GPIO-13 (D7)</option>
-                      <option value="14">GPIO-14 (D5)</option>
+                      <option selected="selected" value="14">GPIO-14 (D5)</option>
                       <option value="15">GPIO-15 (D8)</option>
                       <option value="16">GPIO-16 (D0)</option>
                     </select>
@@ -282,8 +282,8 @@
                       <option value="2">GPIO-2 (D4)</option>
                       <option value="4">GPIO-4 (D2)</option>
                       <option value="5">GPIO-5 (D1)</option>
-                      <option value="12">GPIO-12 (D6)</option>
-                      <option selected="selected" value="13">GPIO-13 (D7)</option>
+                      <option selected="selected" value="12">GPIO-12 (D6)</option>
+                      <option value="13">GPIO-13 (D7)</option>
                       <option value="14">GPIO-14 (D5)</option>
                       <option value="15">GPIO-15 (D8)</option>
                       <option value="16">GPIO-16 (D0)</option>
@@ -311,9 +311,186 @@
                       <option value="4">GPIO-4 (D2)</option>
                       <option value="5">GPIO-5 (D1)</option>
                       <option value="12">GPIO-12 (D6)</option>
+                      <option selected="selected" value="13">GPIO-13 (D7)</option>
+                      <option value="14">GPIO-14 (D5)</option>
+                      <option value="15">GPIO-15 (D8)</option>
+                      <option value="16">GPIO-16 (D0)</option>
+                    </select>
+                  </div><!-- col-9 -->
+                </div><!-- row -->
+              </div><!-- col-6 -->
+            </div><!-- row -->
+            <div class="row">
+              <div class="col-sm-6">
+                <h6>Relay 5</h6>
+                <div class="row form-group">
+      						<label data-toggle="tooltip" title="Depending on your electrical setup, you can choose the relay type" class="col-xs-3">Relay Type</label>
+      						<div class="col-xs-9">
+        						<select class="form-control" id="relay5Type">
+        							<option selected="selected" value="1">Active High</option>
+        							<option value="0">Active Low</option>
+        						</select>
+                  </div><!-- col-9 -->
+                </div><!-- row -->
+                <div class="row form-group">
+                  <label data-toggle="tooltip" title="Choose which ESP port is connected to your relay" class="col-xs-3">Relay Pin</label>
+                  <div class="col-xs-9">
+                    <select class="form-control" id="relay5Pin">
+                      <option value="0">GPIO-0 (D3)</option>
+                      <option value="2">GPIO-2 (D4)</option>
+                      <option value="4">GPIO-4 (D2)</option>
+                      <option value="5">GPIO-5 (D1)</option>
+                      <option value="12">GPIO-12 (D6)</option>
                       <option value="13">GPIO-13 (D7)</option>
                       <option value="14">GPIO-14 (D5)</option>
                       <option selected="selected" value="15">GPIO-15 (D8)</option>
+                      <option value="16">GPIO-16 (D0)</option>
+                    </select>
+                  </div><!-- col-9 -->
+                </div><!-- row -->
+              </div><!-- col-6 -->
+            </div><!-- row -->
+            <hr>
+            <p><span class="text-muted">Pin configuration for each mask.</span></p>
+            <div class="row">
+              <div class="col-sm-6">
+                <h6>Mask 1</h6>
+                <div class="row form-group">
+      						<label data-toggle="tooltip" title="Choose the angle for a open mask state" class="col-xs-3">Mask Open</label>
+      						<div class="col-xs-9">
+        						<select class="form-control" id="mask1Open">
+        						  <option value="0">0°</option>
+        							<option selected="selected" value="20">20°</option>
+        							<option value="45">45°</option>
+                      <option value="90">90°</option>
+                      <option value="135">135°</option>
+                      <option value="160">160°</option>
+                      <option value="180">180°</option>
+        						</select>
+                  </div><!-- col-9 -->
+                </div><!-- row -->
+                <div class="row form-group">
+      						<label data-toggle="tooltip" title="Choose the angle for a close mask state" class="col-xs-3">Mask Close</label>
+      						<div class="col-xs-9">
+        						<select class="form-control" id="mask1Close">
+        							<option value="0">0°</option>
+        							<option value="20">20°</option>
+        							<option value="45">45°</option>
+                      <option value="90">90°</option>
+                      <option value="135">135°</option>
+                      <option selected="selected" value="160">160°</option>
+                      <option value="180">180°</option>
+        						</select>
+                  </div><!-- col-9 -->
+                </div><!-- row -->
+                <div class="row form-group">
+                  <label data-toggle="tooltip" title="Choose which ESP port is connected to your mask" class="col-xs-3">Mask Pin</label>
+                  <div class="col-xs-9">
+                    <select class="form-control" id="mask1Pin">
+                      <option value="0">GPIO-0 (D3)</option>
+                      <option value="2">GPIO-2 (D4)</option>
+                      <option value="4">GPIO-4 (D2)</option>
+                      <option selected="selected" value="5">GPIO-5 (D1)</option>
+                      <option value="12">GPIO-12 (D6)</option>
+                      <option value="13">GPIO-13 (D7)</option>
+                      <option value="14">GPIO-14 (D5)</option>
+                      <option value="15">GPIO-15 (D8)</option>
+                      <option value="16">GPIO-16 (D0)</option>
+                    </select>
+                  </div><!-- col-9 -->
+                </div><!-- row -->
+              </div><!-- col-6 -->
+              <div class="col-sm-6">
+                <h6>Mask 2</h6>
+                <div class="row form-group">
+      						<label data-toggle="tooltip" title="Choose the angle for a open mask state" class="col-xs-3">Mask Open</label>
+      						<div class="col-xs-9">
+        						<select class="form-control" id="mask2Open">
+        							<option value="0">0°</option>
+        							<option value="20">20°</option>
+        							<option value="45">45°</option>
+                      <option value="90">90°</option>
+                      <option value="135">135°</option>
+                      <option selected="selected" value="160">160°</option>
+                      <option value="180">180°</option>
+        						</select>
+                  </div><!-- col-9 -->
+                </div><!-- row -->
+                <div class="row form-group">
+      						<label data-toggle="tooltip" title="Choose the angle for a close mask state" class="col-xs-3">Mask Close</label>
+      						<div class="col-xs-9">
+        						<select class="form-control" id="mask2Close">
+        							<option value="0">0°</option>
+        							<option selected="selected" value="20">20°</option>
+        							<option value="45">45°</option>
+                      <option value="90">90°</option>
+                      <option value="135">135°</option>
+                      <option value="160">160°</option>
+                      <option value="180">180°</option>
+        						</select>
+                  </div><!-- col-9 -->
+                </div><!-- row -->
+                <div class="row form-group">
+                  <label data-toggle="tooltip" title="Choose which ESP port is connected to your mask" class="col-xs-3">Mask Pin</label>
+                  <div class="col-xs-9">
+                    <select class="form-control" id="mask2Pin">
+                      <option value="0">GPIO-0 (D3)</option>
+                      <option value="2">GPIO-2 (D4)</option>
+                      <option selected="selected" value="4">GPIO-4 (D2)</option>
+                      <option value="5">GPIO-5 (D1)</option>
+                      <option value="12">GPIO-12 (D6)</option>
+                      <option value="13">GPIO-13 (D7)</option>
+                      <option value="14">GPIO-14 (D5)</option>
+                      <option value="15">GPIO-15 (D8)</option>
+                      <option value="16">GPIO-16 (D0)</option>
+                    </select>
+                  </div><!-- col-9 -->
+                </div><!-- row -->
+              </div><!-- col-6 -->
+            </div><!-- row -->
+            <div class="row">
+              <div class="col-sm-6">
+                <h6>Mask 3</h6>
+                <div class="row form-group">
+      						<label data-toggle="tooltip" title="Choose the angle for a open mask state" class="col-xs-3">Mask Open</label>
+      						<div class="col-xs-9">
+        						<select class="form-control" id="mask3Open">
+        							<option value="0">0°</option>
+        							<option value="20">20°</option>
+        							<option selected="selected" value="45">45°</option>
+                      <option value="90">90°</option>
+                      <option value="135">135°</option>
+                      <option value="160">160°</option>
+                      <option value="180">180°</option>
+        						</select>
+                  </div><!-- col-9 -->
+                </div><!-- row -->
+                <div class="row form-group">
+      						<label data-toggle="tooltip" title="Choose the angle for a close mask state" class="col-xs-3">Mask Close</label>
+      						<div class="col-xs-9">
+        						<select class="form-control" id="mask3Close">
+        							<option value="0">0°</option>
+        							<option value="20">20°</option>
+        							<option value="45">45°</option>
+                      <option value="90">90°</option>
+                      <option selected="selected" value="135">135°</option>
+                      <option value="160">160°</option>
+                      <option value="180">180°</option>
+        						</select>
+                  </div><!-- col-9 -->
+                </div><!-- row -->
+                <div class="row form-group">
+                  <label data-toggle="tooltip" title="Choose which ESP port is connected to your mask" class="col-xs-3">Mask Pin</label>
+                  <div class="col-xs-9">
+                    <select class="form-control" id="mask3Pin">
+                      <option selected="selected" value="0">GPIO-0 (D3)</option>
+                      <option value="2">GPIO-2 (D4)</option>
+                      <option value="4">GPIO-4 (D2)</option>
+                      <option value="5">GPIO-5 (D1)</option>
+                      <option value="12">GPIO-12 (D6)</option>
+                      <option value="13">GPIO-13 (D7)</option>
+                      <option value="14">GPIO-14 (D5)</option>
+                      <option value="15">GPIO-15 (D8)</option>
                       <option value="16">GPIO-16 (D0)</option>
                     </select>
                   </div><!-- col-9 -->

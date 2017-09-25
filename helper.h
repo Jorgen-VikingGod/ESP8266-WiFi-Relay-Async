@@ -19,6 +19,40 @@
  */
 #define _debug 1
 
+class Servo {
+public:
+  Servo(int minPulseWidth = 500, int maxPulseWidth = 2400) : m_minPulseWidth(minPulseWidth), m_maxPulseWidth(maxPulseWidth) {}
+  void setup(int servoPin, int minPulseWidth = 500, int maxPulseWidth = 2400) {
+    m_servoPin = servoPin;
+    m_minPulseWidth = minPulseWidth;
+    m_maxPulseWidth = maxPulseWidth;
+    // configure pin mode
+    pinMode(m_servoPin, OUTPUT);
+    //setup pwm for 50Hz (20ms)
+    analogWriteFreq(50);
+    //setup pwm for range of 20000 or 1 equals 1uS
+    analogWriteRange(20000);
+  }
+  void setAngleRange(int minAngle = 0, int maxAngle = 180) {
+    m_minAngle = minAngle;
+    m_maxAngle = maxAngle;
+  }
+  void sweep(int angle) {
+    // limit angle to configured range between min and max
+    int angleBound = constrain(angle, m_minAngle, m_maxAngle);
+    // convert angle to correct pulse width in us
+    int anglePulseWidth = map(angleBound, 0, 180, m_minPulseWidth, m_maxPulseWidth);
+    // write out the frequence 
+    analogWrite(m_servoPin, anglePulseWidth);
+  }
+private:
+  int m_servoPin;
+  int m_minPulseWidth;
+  int m_maxPulseWidth;
+  int m_minAngle;
+  int m_maxAngle;
+};
+
 template <typename... Args>
 void DEBUG_PRINTF(const char *format, Args &&...args) {
   if (_debug) {

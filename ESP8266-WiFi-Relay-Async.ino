@@ -35,6 +35,9 @@ extern "C" {
 AsyncWebServer server(80);
 AsyncEventSource events("/events");
 DNSServer dns;
+Servo servo1;
+Servo servo2;
+Servo servo3;
 
 bool shouldReboot = false;
 bool inAPMode = false;
@@ -53,7 +56,25 @@ struct sRelay {
     state = relayState;
   }
 };
-sRelay relay[4] = {sRelay(D5,1,LOW), sRelay(D6,1,LOW), sRelay(D7,1,LOW), sRelay(D8,1,LOW)};
+volatile sRelay relay[5] = {sRelay(D4,1,LOW), sRelay(D5,1,LOW), sRelay(D6,1,LOW), sRelay(D7,1,LOW), sRelay(D8,1,LOW)};
+
+struct sMask {
+  Servo *servo;
+  int pin;
+  uint8_t open;
+  uint8_t close;
+  uint8_t state;
+  uint8_t sweep;
+  sMask(Servo *pServo = nullptr, int maskPin = -1, uint8_t maskOpen = 20, uint8_t maskClose = 160, uint8_t maskState = 1, uint8_t maskSweep = 0) {
+    servo = pServo;
+    pin = maskPin;
+    open = maskOpen;
+    close = maskClose;
+    state = maskState;
+    sweep = maskSweep;
+  }
+};
+volatile sMask mask[3] = {sMask(&servo1,D1,20,160,1,0), sMask(&servo2,D2,160,20,1,0), sMask(&servo3,D3,45,135,1,0)};
 
 void setup()
 {
@@ -63,16 +84,10 @@ void setup()
   DEBUG_PRINT("\n");
   Serial.setDebugOutput(true);
 
-  // configure pins
   pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(relay[0].pin, OUTPUT);
-  pinMode(relay[1].pin, OUTPUT);
-  pinMode(relay[2].pin, OUTPUT);
-  pinMode(relay[3].pin, OUTPUT);
-
+  
   // load settings
   EEPROM.begin(512);
-  loadSettings();
 
   DEBUG_PRINTLN("");
   DEBUG_PRINT(F("Heap: ")); DEBUG_PRINTLN(system_get_free_heap_size());
@@ -210,6 +225,82 @@ void setup()
     String value = pPayload->value();
     setRelay(3, value.toInt());
     sendRelay(3, request);
+  });
+  // get relay5 state: GET http://wifi-relay.local/relay5
+  // set relay5 state: GET http://wifi-relay.local/relay5?value=0 or 1
+  server.on("/relay5", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->hasParam("value")) {
+      AsyncWebParameter* pPayload = request->getParam("value");
+      String value = pPayload->value();
+      setRelay(4, value.toInt());
+      request->redirect("/");
+    } else {
+      sendRelay(4, request);
+    }
+  });
+  // set relay5 state: POST http://wifi-relay.local/relay5 with value=0 or 1
+  server.on("/relay5", HTTP_POST, [](AsyncWebServerRequest *request) {
+    AsyncWebParameter* pPayload = request->getParam("value");
+    String value = pPayload->value();
+    setRelay(4, value.toInt());
+    sendRelay(4, request);
+  });
+  // get mask1 state: GET http://wifi-relay.local/mask1
+  // set mask1 state: GET http://wifi-relay.local/mask1?value=0 or 1
+  server.on("/mask1", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->hasParam("value")) {
+      AsyncWebParameter* pPayload = request->getParam("value");
+      String value = pPayload->value();
+      setMask(0, value.toInt());
+      request->redirect("/");
+    } else {
+      sendMask(0, request);
+    }
+  });
+  // set mask1 state: POST http://wifi-relay.local/mask1 with value=0 or 1
+  server.on("/mask1", HTTP_POST, [](AsyncWebServerRequest *request) {
+    AsyncWebParameter* pPayload = request->getParam("value");
+    String value = pPayload->value();
+    setMask(0, value.toInt());
+    sendMask(0, request);
+  });
+  // get mask2 state: GET http://wifi-relay.local/mask2
+  // set mask2 state: GET http://wifi-relay.local/mask2?value=0 or 1
+  server.on("/mask2", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->hasParam("value")) {
+      AsyncWebParameter* pPayload = request->getParam("value");
+      String value = pPayload->value();
+      setMask(1, value.toInt());
+      request->redirect("/");
+    } else {
+      sendMask(1, request);
+    }
+  });
+  // set mask2 state: POST http://wifi-relay.local/mask2 with value=0 or 1
+  server.on("/mask2", HTTP_POST, [](AsyncWebServerRequest *request) {
+    AsyncWebParameter* pPayload = request->getParam("value");
+    String value = pPayload->value();
+    setMask(1, value.toInt());
+    sendMask(1, request);
+  });
+  // get mask3 state: GET http://wifi-relay.local/mask3
+  // set mask3 state: GET http://wifi-relay.local/mask3?value=0 or 1
+  server.on("/mask3", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->hasParam("value")) {
+      AsyncWebParameter* pPayload = request->getParam("value");
+      String value = pPayload->value();
+      setMask(2, value.toInt());
+      request->redirect("/");
+    } else {
+      sendMask(2, request);
+    }
+  });
+  // set mask3 state: POST http://wifi-relay.local/mask3 with value=0 or 1
+  server.on("/mask3", HTTP_POST, [](AsyncWebServerRequest *request) {
+    AsyncWebParameter* pPayload = request->getParam("value");
+    String value = pPayload->value();
+    setMask(2, value.toInt());
+    sendMask(2, request);
   });
 
   // Simple Firmware Update Handler
@@ -377,6 +468,20 @@ void setup()
     // Try to load configuration file so we can connect to an Wi-Fi Access Point
   // Do not worry if no config file is present, we fall back to Access Point mode and device can be easily configured
   if (!loadConfiguration()) {
+    // configure pins
+    pinMode(relay[0].pin, OUTPUT);
+    pinMode(relay[1].pin, OUTPUT);
+    pinMode(relay[2].pin, OUTPUT);
+    pinMode(relay[3].pin, OUTPUT);
+    pinMode(relay[4].pin, OUTPUT);
+
+    mask[0].servo->setup(mask[0].pin);
+    mask[1].servo->setup(mask[1].pin);
+    mask[2].servo->setup(mask[2].pin);
+  
+    // load settings
+    loadSettings();
+    
     fallbacktoAPMode();
   }
 }
@@ -387,8 +492,20 @@ void loop()
   // check for a new update and restart
   if (shouldReboot) {
     DEBUG_PRINTLN(F("[UPDT] Rebooting..."));
-    delay(100);
+    delay(1000);
     ESP.restart();
+    delay(5000);
+  }
+  
+  for (uint8_t idx = 0; idx < 3; idx++) {
+    if (mask[idx].sweep && mask[idx].servo) {
+      uint8_t servoValue = (mask[idx].state ? mask[idx].open : mask[idx].close);
+      DEBUG_PRINTF("servo%d.write(%d)\n", idx+1, servoValue);
+      mask[idx].servo->sweep(servoValue);
+      delay(1000);
+      mask[idx].sweep = 0;
+    }
+    yield();
   }
   ArduinoOTA.handle();
 }
@@ -457,11 +574,29 @@ bool loadConfiguration() {
   relay[2].pin = json["relay3"]["pin"];
   relay[3].type = json["relay4"]["type"];
   relay[3].pin = json["relay4"]["pin"];
+  relay[4].type = json["relay5"]["type"];
+  relay[4].pin = json["relay5"]["pin"];
   
   pinMode(relay[0].pin, OUTPUT);
   pinMode(relay[1].pin, OUTPUT);
   pinMode(relay[2].pin, OUTPUT);
   pinMode(relay[3].pin, OUTPUT);
+  pinMode(relay[4].pin, OUTPUT);
+
+  mask[0].open = json["mask1"]["open"];
+  mask[0].close = json["mask1"]["close"];
+  mask[0].pin = json["mask1"]["pin"];
+  mask[1].open = json["mask2"]["open"];
+  mask[1].close = json["mask2"]["close"];
+  mask[1].pin = json["mask2"]["pin"];
+  mask[2].open = json["mask3"]["open"];
+  mask[2].close = json["mask3"]["close"];
+  mask[2].pin = json["mask3"]["pin"];
+
+  mask[0].servo->setup(mask[0].pin);
+  mask[1].servo->setup(mask[1].pin);
+  mask[2].servo->setup(mask[2].pin);
+  
   loadSettings();
 
   const char * ssid = json["ssid"];
@@ -496,34 +631,29 @@ bool loadConfiguration() {
 bool connectSTA(const char* ssid, const char* password, byte bssid[6]) {
   WiFi.mode(WIFI_STA);
   // First connect to a wifi network
-  WiFi.begin(ssid, password, 0, bssid);
+  WiFi.begin(ssid, password);//, 0, bssid);
   // Inform user we are trying to connect
   DEBUG_PRINT(F("[INFO] Trying to connect WiFi: "));
   DEBUG_PRINT(ssid);
   // We try it for 20 seconds and give up on if we can't connect
   unsigned long now = millis();
   uint8_t timeout = 20; // define when to time out in seconds
-  // Wait until we connect or 20 seconds pass
-  do {
-    if (WiFi.status() == WL_CONNECTED) {
-      break;
+
+  while(WiFi.waitForConnectResult() != WL_CONNECTED) {
+    if (millis() - now < timeout * 1000) {
+      delay(500);
+      DEBUG_PRINT(F("."));
+    } else {
+      DEBUG_PRINTLN("");
+      DEBUG_PRINTLN(F("[WARN] Couldn't connect in time"));
+      return false;
     }
-    delay(500);
-    DEBUG_PRINT(F("."));
   }
-  while (millis() - now < timeout * 1000);
-  // We now out of the while loop, either time is out or we connected. check what happened
-  if (WiFi.status() == WL_CONNECTED) { // Assume time is out first and check
-    DEBUG_PRINTLN("");
-    DEBUG_PRINT(F("[INFO] Client IP address: ")); // Great, we connected, inform
-    DEBUG_PRINTLN(WiFi.localIP());
-    return true;
-  }
-  else { // We couln't connect, time is out, inform
-    DEBUG_PRINTLN("");
-    DEBUG_PRINTLN(F("[WARN] Couldn't connect in time"));
-    return false;
-  }
+
+  DEBUG_PRINTLN("");
+  DEBUG_PRINT(F("[INFO] Client IP address: ")); // Great, we connected, inform
+  DEBUG_PRINTLN(WiFi.localIP());
+  return true;
 }
 
 // load stored settings from EEPROM
@@ -534,11 +664,22 @@ void loadSettings()
   relay[1].state = EEPROM.read(1);
   relay[2].state = EEPROM.read(2);
   relay[3].state = EEPROM.read(3);
+  relay[4].state = EEPROM.read(4);
+
+  mask[0].state = EEPROM.read(5);
+  mask[1].state = EEPROM.read(6);
+  mask[2].state = EEPROM.read(7);
+  
   // set relay states
   digitalWrite(relay[0].pin, relay[0].state);
   digitalWrite(relay[1].pin, relay[1].state);
   digitalWrite(relay[2].pin, relay[2].state);
   digitalWrite(relay[3].pin, relay[3].state);
+  digitalWrite(relay[4].pin, relay[4].state);
+
+  mask[0].sweep = 1;
+  mask[1].sweep = 1;
+  mask[2].sweep = 1;
 }
 
 // send all relay states back to website
@@ -551,6 +692,10 @@ void sendAll(AsyncWebServerRequest *request)
   root["relay2"] = relay[1].state;
   root["relay3"] = relay[2].state;
   root["relay4"] = relay[3].state;
+  root["relay5"] = relay[4].state;
+  root["mask1"] = mask[0].state;
+  root["mask2"] = mask[1].state;
+  root["mask3"] = mask[2].state;
   root.printTo(*response);
   request->send(response);
 }
@@ -569,9 +714,36 @@ void sendRelay(uint8_t idx, AsyncWebServerRequest *request)
 // set current relay state and store it in EEPROM
 void setRelay(uint8_t idx, uint8_t value)
 {
+  DEBUG_PRINTF("setRelay(%d, %d)\n", idx, value);
   relay[idx].state = (value == 0 ? LOW : HIGH);
   digitalWrite(relay[idx].pin, relay[idx].state);
   EEPROM.write(idx, relay[idx].state);
+  EEPROM.commit();
+}
+
+// send mask state back to website (idx = index of mask)
+void sendMask(uint8_t idx, AsyncWebServerRequest *request)
+{
+  AsyncResponseStream *response = request->beginResponseStream("text/json");
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject &root = jsonBuffer.createObject();
+  root["mask"+String(idx+1)] = mask[idx].state;
+  root.printTo(*response);
+  request->send(response);
+}
+
+// set current mask state and store it in EEPROM
+void setMask(uint8_t idx, uint8_t value)
+{
+  DEBUG_PRINTF("setMask(%d, %d)\n", idx, value);
+  mask[idx].state = value;
+  mask[idx].sweep = 1;
+
+/*
+  uint8_t servoValue = (mask[idx].state ? mask[idx].open : mask[idx].close);
+  mask[idx].servo->sweep(servoValue);
+*/
+  EEPROM.write(5 + idx, mask[idx].state);
   EEPROM.commit();
 }
 

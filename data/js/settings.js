@@ -1,16 +1,13 @@
 $(document).ready(function() {
-  console.log('start and get all data');
   $('[data-toggle="tooltip"]').tooltip();
   //getAll();
 });
 
 $('#btnRefStat').click(function() {
-  console.log('refreshStats');
   // get current stats
   $('#loading').css('display', 'block');
   $.get(urlBase + 'settings/status', function(data) {
     $('#loading').css('display', 'none');
-    console.log(data);
     $('#chip').text(data.chipid);
     $('#cpu').text(data.cpu + ' MHz');
     $('#heap').text(data.heap + ' Bytes');
@@ -32,12 +29,10 @@ $('#btnRefStat').click(function() {
 });
 
 $('#ssid').change(function() {
-  console.log('ssid changed');
-  $('#wifiBSSID').val($('#ssid option:selected').val());
+  $('#wifiBSSID').val($('#ssid option:selected').attr('bssidvalue'));
 });
 
 $('#btnScanBSSID').click(function() {
-  console.log('scanWifi');
   // change scan button text to ...
   $('#btnScanBSSID').text('...');
   $('#inputToHide').css('display', 'none');
@@ -62,7 +57,7 @@ $('#btnScanBSSID').click(function() {
             .text('BSSID: ' + key.bssid + ', Signal Strength: ' + key.rssi + ', Network: ' + key.ssid)
         );
       });
-      $("#ssid").change();
+      $('#ssid').change();
       // change scan button text to rescan
       $('#btnScanBSSID').text('rescan');
     }
@@ -70,7 +65,6 @@ $('#btnScanBSSID').click(function() {
 });
 
 $('#btnSaveConf').click(function() {
-  console.log('saveConf');
   var adminpwd = $('#adminPwd').val();
   if (adminpwd === null || adminpwd === '') {
     alert('Administrator Password cannot be empty');
@@ -102,23 +96,30 @@ $('#btnSaveConf').click(function() {
     relay3: { type: $('#relay3Type option:selected').val(),
               pin: $('#relay3Pin option:selected').val() },
     relay4: { type: $('#relay4Type option:selected').val(),
-              pin: $('#relay4Pin option:selected').val() }
+              pin: $('#relay4Pin option:selected').val() },
+    relay5: { type: $('#relay5Type option:selected').val(),
+              pin: $('#relay5Pin option:selected').val() },
+    mask1:  { open: $('#mask1Open option:selected').val(),
+              close: $('#mask1Close option:selected').val(),
+              pin: $('#mask1Pin option:selected').val() },
+    mask2:  { open: $('#mask2Open option:selected').val(),
+              close: $('#mask2Close option:selected').val(),
+              pin: $('#mask2Pin option:selected').val() },
+    mask3:  { open: $('#mask3Open option:selected').val(),
+              close: $('#mask3Close option:selected').val(),
+              pin: $('#mask3Pin option:selected').val() },
   };
-  console.log(datatosend);
   $('#loading').css('display', 'block');
   $.jpost(urlBase + 'settings/configfile', datatosend).then(function(data) {
     $('#loading').css('display', 'none');
-    console.log(data);
   });
 });
 
 $('#btnBackupSet').click(function() {
-  console.log('backupSet');
   $('#downloadSet')[0].click();
 });
 
 $('#restoreSet').change(function() {
-  console.log('restoreSet');
   //get file object
   var file = $('#restoreSet').prop('files')[0];
   if (file) {
@@ -136,7 +137,6 @@ $('#restoreSet').change(function() {
             $('#loading').css('display', 'block');
             $.jpost(urlBase + 'settings/configfile', json).then(function(data) {
               $('#loading').css('display', 'none');
-              console.log(data);
               alert('Device now should reboot with new settings');
               location.reload();
             });
@@ -154,25 +154,35 @@ function getAll() {
   $('#loading').css('display', 'block');
   $.get(urlBase + 'settings/configfile', function(data) {
     $('#loading').css('display', 'none');
-    console.log('listConf', data);
     $('#inputToHide').val(data.ssid);
     $('#wifiPass').val(data.wifipwd);
     $('#adminPwd').val(data.adminpwd);
     $('#hostname').val(data.hostname);
-    $("#relay1Type").val(data.relay1.type).change();
-    $("#relay1Pin").val(data.relay1.pin).change();
-    $("#relay2Type").val(data.relay2.type).change();
-    $("#relay2Pin").val(data.relay2.pin).change();
-    $("#relay3Type").val(data.relay3.type).change();
-    $("#relay3Pin").val(data.relay3.pin).change();
-    $("#relay4Type").val(data.relay4.type).change();
-    $("#relay4Pin").val(data.relay4.pin).change();
+    $('#relay1Type').val(data.relay1.type).change();
+    $('#relay1Pin').val(data.relay1.pin).change();
+    $('#relay2Type').val(data.relay2.type).change();
+    $('#relay2Pin').val(data.relay2.pin).change();
+    $('#relay3Type').val(data.relay3.type).change();
+    $('#relay3Pin').val(data.relay3.pin).change();
+    $('#relay4Type').val(data.relay4.type).change();
+    $('#relay4Pin').val(data.relay4.pin).change();
+    $('#relay5Type').val(data.relay5.type).change();
+    $('#relay5Pin').val(data.relay5.pin).change();
+    $('#mask1Open').val(data.mask1.open).change();
+    $('#mask1Close').val(data.mask1.close).change();
+    $('#mask1Pin').val(data.mask1.pin).change();
+    $('#mask2Open').val(data.mask2.open).change();
+    $('#mask2Close').val(data.mask2.close).change();
+    $('#mask2Pin').val(data.mask2.pin).change();
+    $('#mask3Open').val(data.mask3.open).change();
+    $('#mask3Close').val(data.mask3.close).change();
+    $('#mask3Pin').val(data.mask3.pin).change();
     updateToggleButton('wifiMode', data.wifimode);
     if (data.wifimode === 0) {
-      $('#wifiBSSID').val(data.bssid);
-      $('#hideBSSID').css('display', 'block');
+      $('#hideBSSID').css('display', 'none');
+      $('#hideSSID').css('display', 'none');
     }
-    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+    var dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2));
     $('#downloadSet').attr({download: data.hostname + '-settings.json',href: dataStr});
   });
 }
@@ -186,11 +196,12 @@ function handleToggleButton(id, state) {
 }
 
 function setWifiMode(id, state) {
-  console.log(id + ' ' + state);
   if (state === 'ap') {
     $('#hideBSSID').css('display', 'none');
+    $('#hideSSID').css('display', 'none');
   } else {
     $('#hideBSSID').css('display', 'block');
+    $('#hideSSID').css('display', 'block');
   }
 }
 
@@ -200,14 +211,3 @@ function colorStatusbar(ref) {
   else if (percentage > 25) ref.attr('class','progress-bar progress-bar-warning');
   else ref.attr('class','progress-bar progress-bar-danger');
 }
-/*
-function updateData() {
-  console.log("updateData()");
-  $.get('DHT', function(data) {
-    console.log('updateData(): got Data:', data);
-  });
-}
-
-updateData();
-window.setInterval(updateData, 5000);
-*/
