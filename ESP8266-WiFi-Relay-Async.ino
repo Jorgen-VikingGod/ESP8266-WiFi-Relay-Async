@@ -33,7 +33,9 @@ extern "C" {
 #include "helper.h"
 
 AsyncWebServer server(80);
-AsyncEventSource events("/events");
+AsyncEventSource events("/events"); 
+AsyncWebSocket ws("/ws");
+
 DNSServer dns;
 Servo servo1;
 Servo servo2;
@@ -102,16 +104,79 @@ void setup()
 
   // initialize filesystem
   SPIFFS.begin();
-  if (_debug) {
-    Dir dir = SPIFFS.openDir("/");
-    while (dir.next()) {
-      String fileName = dir.fileName();
-      size_t fileSize = dir.fileSize();
-      DEBUG_PRINTF("FS File: %s, size: %s\n", fileName.c_str(), String(fileSize).c_str());
+  /* Remove Users Helper
+    Dir dir = SPIFFS.openDir("/P/");
+    while (dir.next()){
+    SPIFFS.remove(dir.fileName());
     }
-    DEBUG_PRINTLN(F(""));
+  */
+
+  // Try to load configuration file so we can connect to an Wi-Fi Access Point
+  // Do not worry if no config file is present, we fall back to Access Point mode and device can be easily configured
+  if (!loadConfiguration()) {
+    // configure pins
+    pinMode(relay[0].pin, OUTPUT);
+    pinMode(relay[1].pin, OUTPUT);
+    pinMode(relay[2].pin, OUTPUT);
+    pinMode(relay[3].pin, OUTPUT);
+    pinMode(relay[4].pin, OUTPUT);
+
+    mask[0].servo->setup(mask[0].pin);
+    mask[1].servo->setup(mask[1].pin);
+    mask[2].servo->setup(mask[2].pin);
+  
+    // load settings
+    loadSettings();
+    
+    fallbacktoAPMode();
   }
 
+  // Start WebSocket Plug-in and handle incoming message on "onWsEvent" function
+  server.addHandler(&ws);
+  ws.onEvent(onWsEvent);
+  
+  handleOTA();
+  
+  events.onConnect([](AsyncEventSourceClient *client) {
+    client->send("hello!",NULL,millis(),1000);
+  });
+  server.addHandler(&events);
+  server.addHandler(new SPIFFSEditor(http_username,http_password));
+
+  // handle requests
+  handleRequests();
+  
+  // start webserver
+  server.begin();
+}
+
+// main loop
+void loop()
+{
+  // check for a new update and restart
+  if (shouldReboot) {
+    DEBUG_PRINTLN(F("[UPDT] Rebooting..."));
+    delay(1000);
+    ESP.restart();
+    delay(5000);
+  }
+  
+  for (uint8_t idx = 0; idx < 3; idx++) {
+    if (mask[idx].sweep && mask[idx].servo) {
+      uint8_t servoValue = (mask[idx].state ? mask[idx].open : mask[idx].close);
+      DEBUG_PRINTF("servo%d.write(%d)\n", idx+1, servoValue);
+      mask[idx].servo->sweep(servoValue);
+      delay(1000);
+      mask[idx].sweep = 0;
+    }
+    yield();
+  }
+  ArduinoOTA.handle();
+}
+
+
+void handleOTA()
+{
   // configure OTA Updates and send OTA events to the browser
   ArduinoOTA.onStart([]() { events.send("Update Start", "ota"); });
   ArduinoOTA.onEnd([]() { events.send("Update End", "ota"); });
@@ -129,23 +194,10 @@ void setup()
   });
   ArduinoOTA.setHostname(hostName);
   ArduinoOTA.begin();
+}
 
-  // begin MDNS to access device with http://wifi-relay.local
-  // you need bonjour:
-  // for windows:  https://support.apple.com/kb/DL999?locale=en_US&viewlocale=de_DE
-  MDNS.begin(hostName);
-  
-  DEBUG_PRINT("Open http://");
-  DEBUG_PRINT(hostName);
-  DEBUG_PRINT(".local/edit to see the file browser");
-  
-  events.onConnect([](AsyncEventSourceClient *client) {
-    client->send("hello!",NULL,millis(),1000);
-  });
-  server.addHandler(&events);
-  server.addHandler(new SPIFFSEditor(http_username,http_password));
-
-  // handle requests
+void handleRequests() 
+{
   // get all relay states: GET http://wifi-relay.local/all
   server.on("/all", HTTP_GET, [](AsyncWebServerRequest *request) {
     sendAll(request);
@@ -311,7 +363,7 @@ void setup()
     request->send(response);
   }, [](AsyncWebServerRequest * request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
     if (!index) {
-      Serial.printf("[ UPDT ] Firmware update started: %s\n", filename.c_str());
+      DEBUG_PRINTF("[ UPDT ] Firmware update started: %s\n", filename.c_str());
       Update.runAsync(true);
       if (!Update.begin((ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000)) {
         Update.printError(Serial);
@@ -324,7 +376,7 @@ void setup()
     }
     if (final) {
       if (Update.end(true)) {
-        Serial.printf("[ UPDT ] Firmware update finished: %uB\n", index + len);
+        DEBUG_PRINTF("[ UPDT ] Firmware update finished: %uB\n", index + len);
       } else {
         Update.printError(Serial);
       }
@@ -459,55 +511,141 @@ void setup()
       }
     }
   });
-  // start webserver
-  server.begin();
-  DEBUG_PRINT(F("HTTP server started"));
-  // Add service to MDNS
-  MDNS.addService("http", "tcp", 80);
+}
 
-    // Try to load configuration file so we can connect to an Wi-Fi Access Point
-  // Do not worry if no config file is present, we fall back to Access Point mode and device can be easily configured
-  if (!loadConfiguration()) {
-    // configure pins
-    pinMode(relay[0].pin, OUTPUT);
-    pinMode(relay[1].pin, OUTPUT);
-    pinMode(relay[2].pin, OUTPUT);
-    pinMode(relay[3].pin, OUTPUT);
-    pinMode(relay[4].pin, OUTPUT);
+// Handles WebSocket Events
+void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len) {
+  if (type == WS_EVT_ERROR) {
+    DEBUG_PRINTF("[ WARN ] WebSocket[%s][%u] error(%u): %s\r\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+  } else if (type == WS_EVT_DATA) {
+    AwsFrameInfo * info = (AwsFrameInfo*)arg;
+    String msg = "";
 
-    mask[0].servo->setup(mask[0].pin);
-    mask[1].servo->setup(mask[1].pin);
-    mask[2].servo->setup(mask[2].pin);
-  
-    // load settings
-    loadSettings();
-    
-    fallbacktoAPMode();
+    if (info->final && info->index == 0 && info->len == len) {
+      //the whole message is in a single frame and we got all of it's data
+      for (size_t i = 0; i < info->len; i++) {
+        msg += (char) data[i];
+      }
+
+      // We should always get a JSON object (stringfied) from browser, so parse it
+      DynamicJsonBuffer jsonBuffer;
+      JsonObject& root = jsonBuffer.parseObject(msg);
+      if (!root.success()) {
+        DEBUG_PRINTLN(F("[ WARN ] Couldn't parse WebSocket message"));
+        return;
+      }
+
+      // Web Browser sends some commands, check which command is given
+      const char * command = root["command"];
+
+      // Check whatever the command is and act accordingly
+      if (strcmp(command, "configfile")  == 0) {
+        File f = SPIFFS.open("/config.json", "w+");
+        if (f) {
+          root.prettyPrintTo(f);
+          //f.print(msg);
+          f.close();
+          ESP.reset();
+        }
+      } else if (strcmp(command, "status")  == 0) {
+        sendStatusWS();
+      } else if (strcmp(command, "all")  == 0) {
+        sendAllWS();
+      } else if (strcmp(command, "toggle")  == 0) {
+        sendToggleResponse(root);
+      } else if (strcmp(command, "scan")  == 0) {
+        WiFi.scanNetworksAsync(printScanResult, true);
+      } else if (strcmp(command, "getconf")  == 0) {
+        File configFile = SPIFFS.open("/config.json", "r");
+        if (configFile) {
+          size_t len = configFile.size();
+          AsyncWebSocketMessageBuffer * buffer = ws.makeBuffer(len); //  creates a buffer (len + 1) for you.
+          if (buffer) {
+            configFile.readBytes((char *)buffer->get(), len + 1);
+            ws.textAll(buffer);
+          }
+          configFile.close();
+        }
+      }
+    }
   }
 }
 
-// main loop
-void loop()
-{
-  // check for a new update and restart
-  if (shouldReboot) {
-    DEBUG_PRINTLN(F("[UPDT] Rebooting..."));
-    delay(1000);
-    ESP.restart();
-    delay(5000);
+// send all relay states back to website
+void sendAllWS() {
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+  root["command"] = "all";
+  root["relay1"] = relay[0].state;
+  root["relay2"] = relay[1].state;
+  root["relay3"] = relay[2].state;
+  root["relay4"] = relay[3].state;
+  root["relay5"] = relay[4].state;
+  root["mask1"] = mask[0].state;
+  root["mask2"] = mask[1].state;
+  root["mask3"] = mask[2].state;
+  size_t len = root.measureLength();
+  AsyncWebSocketMessageBuffer * buffer = ws.makeBuffer(len); //  creates a buffer (len + 1) for you.
+  if (buffer) {
+    root.printTo((char *)buffer->get(), len + 1);
+    ws.textAll(buffer);
   }
-  
-  for (uint8_t idx = 0; idx < 3; idx++) {
-    if (mask[idx].sweep && mask[idx].servo) {
-      uint8_t servoValue = (mask[idx].state ? mask[idx].open : mask[idx].close);
-      DEBUG_PRINTF("servo%d.write(%d)\n", idx+1, servoValue);
-      mask[idx].servo->sweep(servoValue);
-      delay(1000);
-      mask[idx].sweep = 0;
-    }
-    yield();
+}
+
+void sendToggleResponse(JsonObject &json) {
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+  root["command"] = "toggle";
+  const char * id = json["id"];
+  if (strcmp(id, "relay1")  == 0) {
+    setRelay(0, json["value"]);
+  } else if (strcmp(id, "relay2")  == 0) {
+    setRelay(1, json["value"]);
+  } else if (strcmp(id, "relay3")  == 0) {
+    setRelay(2, json["value"]);
+  } else if (strcmp(id, "relay4")  == 0) {
+    setRelay(3, json["value"]);
+  } else if (strcmp(id, "relay5")  == 0) {
+    setRelay(4, json["value"]);
+  } else if (strcmp(id, "mask1")  == 0) {
+    setMask(0, json["value"]);
+  } else if (strcmp(id, "mask2")  == 0) {
+    setMask(1, json["value"]);
+  } else if (strcmp(id, "mask3")  == 0) {
+    setMask(2, json["value"]);
   }
-  ArduinoOTA.handle();
+  root[id] = json["value"];
+  size_t len = root.measureLength();
+  AsyncWebSocketMessageBuffer * buffer = ws.makeBuffer(len); //  creates a buffer (len + 1) for you.
+  if (buffer) {
+    root.printTo((char *)buffer->get(), len + 1);
+    ws.textAll(buffer);
+  }
+}
+
+// Send Scanned SSIDs to websocket clients as JSON object
+void printScanResult(int networksFound) {
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+  root["command"] = "ssidlist";
+  JsonArray& scan = root.createNestedArray("list");
+  for (int i = 0; i < networksFound; ++i) {
+    JsonObject& item = scan.createNestedObject();
+    // Print SSID for each network found
+    item["ssid"] = WiFi.SSID(i);
+    item["bssid"] = WiFi.BSSIDstr(i);
+    item["rssi"] = WiFi.RSSI(i);
+    item["channel"] = WiFi.channel(i);
+    item["enctype"] = WiFi.encryptionType(i);
+    item["hidden"] = WiFi.isHidden(i)?true:false;
+  }
+  size_t len = root.measureLength();
+  AsyncWebSocketMessageBuffer * buffer = ws.makeBuffer(len); //  creates a buffer (len + 1) for you.
+  if (buffer) {
+    root.printTo((char *)buffer->get(), len + 1);
+    ws.textAll(buffer);
+  }
+  WiFi.scanDelete();
 }
 
 String printIP(IPAddress adress) {
@@ -631,7 +769,7 @@ bool loadConfiguration() {
 bool connectSTA(const char* ssid, const char* password, byte bssid[6]) {
   WiFi.mode(WIFI_STA);
   // First connect to a wifi network
-  WiFi.begin(ssid, password);//, 0, bssid);
+  WiFi.begin(ssid, password, 0, bssid);
   // Inform user we are trying to connect
   DEBUG_PRINT(F("[INFO] Trying to connect WiFi: "));
   DEBUG_PRINT(ssid);
@@ -790,4 +928,50 @@ void sendStatus(AsyncWebServerRequest *request)
   root.printTo(*response);
   request->send(response);
 }
+
+void sendStatusWS() {
+  struct ip_info info;
+  FSInfo fsinfo;
+  if (!SPIFFS.info(fsinfo)) {
+    Serial.print(F("[ WARN ] Error getting info on SPIFFS"));
+  }
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+  root["command"] = "status";
+  root["heap"] = ESP.getFreeHeap();
+  root["chipid"] = String(ESP.getChipId(), HEX);
+  root["cpu"] = ESP.getCpuFreqMHz();
+  root["availsize"] = ESP.getFreeSketchSpace();
+  root["availspiffs"] = fsinfo.totalBytes - fsinfo.usedBytes;
+  root["spiffssize"] = fsinfo.totalBytes;
+  if (inAPMode) {
+    wifi_get_ip_info(SOFTAP_IF, &info);
+    struct softap_config conf;
+    wifi_softap_get_config(&conf);
+    root["ssid"] = String(reinterpret_cast<char*>(conf.ssid));
+    root["dns"] = printIP(WiFi.softAPIP());
+    root["mac"] = WiFi.softAPmacAddress();
+  }
+  else {
+    wifi_get_ip_info(STATION_IF, &info);
+    struct station_config conf;
+    wifi_station_get_config(&conf);
+    root["ssid"] = String(reinterpret_cast<char*>(conf.ssid));
+    root["dns"] = printIP(WiFi.dnsIP());
+    root["mac"] = WiFi.macAddress();
+  }
+  IPAddress ipaddr = IPAddress(info.ip.addr);
+  IPAddress gwaddr = IPAddress(info.gw.addr);
+  IPAddress nmaddr = IPAddress(info.netmask.addr);
+  root["ip"] = printIP(ipaddr);
+  root["gateway"] = printIP(gwaddr);
+  root["netmask"] = printIP(nmaddr);
+  size_t len = root.measureLength();
+  AsyncWebSocketMessageBuffer * buffer = ws.makeBuffer(len); //  creates a buffer (len + 1) for you.
+  if (buffer) {
+    root.printTo((char *)buffer->get(), len + 1);
+    ws.textAll(buffer);
+  }
+}
+
 
