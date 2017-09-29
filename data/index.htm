@@ -26,7 +26,7 @@
           <li class="btn-primary active"><a href="/index.htm">Dashboard</a></li>
           <li><a href="/settings.htm">Settings</a></li>
           <li>
-            <a href="" type="button" data-toggle="tooltip" title="Refresh relay states">
+            <a href="#" type="button" data-toggle="tooltip" title="Refresh relay states">
               <span class="glyphicon glyphicon-refresh" id="btnRefresh"></span>
             </a>
           </li>
@@ -35,6 +35,21 @@
     </div><!-- container -->
   </nav><!-- navbar -->
   <div class="container">
+    <!-- Modal -->
+    <div class="modal fade" id="loadModal" role="dialog">
+      <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">fetching data...</h4>
+          </div>
+          <div class="modal-body">
+            <img src="images/load.gif">
+            <h5>Please wait while fetching data... <span id="loadPages"></span></h5>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="row">
       <div class="col-sm-6">
         <div class="panel panel-primary">

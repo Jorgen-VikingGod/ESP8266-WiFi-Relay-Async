@@ -45,6 +45,8 @@ $('#btnSaveConf').click(function() {
     command: 'configfile',
     hostname: $('#hostname').val(),
     adminpwd: adminpwd,
+    ssid: $('#ssid').val(),
+    wifipwd: $('#wifipwd').val(),
     relay1: { type: $('#relay1Type option:selected').val(),
               pin: $('#relay1Pin option:selected').val() },
     relay2: { type: $('#relay2Type option:selected').val(),
@@ -116,6 +118,8 @@ function getAll() {
     $('#loadModal').modal('hide');
     $('#adminPwd').val(data.adminpwd);
     $('#hostname').val(data.hostname);
+    $('#ssid').val(data.ssid);
+    $('#wifipwd').val(data.wifipwd);
     $('#relay1Type').val(data.relay1.type).change();
     $('#relay1Pin').val(data.relay1.pin).change();
     $('#relay2Type').val(data.relay2.type).change();
