@@ -6,7 +6,6 @@ $('#btnRefStat').click(function() {
   // get current stats
   $('#loadModal').modal('show');
   $.get(urlBase + 'settings/status', function(data) {
-    console.log(data);
     $('#loadModal').modal('hide');
     $('#chip').text(data.chipid);
     $('#cpu').text(data.cpu + ' MHz');
@@ -113,8 +112,6 @@ function updateSettingsDialog() {
 function getAll() {
   $('#loadModal').modal('show');
   $.get(urlBase + 'settings/configfile', function(data) {
-    //data = JSON.parse(data);
-    console.log(data);
     $('#loadModal').modal('hide');
     $('#adminPwd').val(data.adminpwd);
     $('#hostname').val(data.hostname);
@@ -166,10 +163,8 @@ function colorStatusbar(ref) {
   if (!ref.css('width').includes('%')) {
     var parentWidth = ref.offsetParent().width();
     var percent = 100*width/parentWidth;
-    console.log(ref, width, parentWidth, percent);
   } else {
     var percent = width;
-    console.log(ref, width, percent);
   }
   if (percent > 50) ref.attr('class','progress-bar progress-bar-success');
   else if (percent > 25) ref.attr('class','progress-bar progress-bar-warning');

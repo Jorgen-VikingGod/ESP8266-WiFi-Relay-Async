@@ -76,7 +76,6 @@ function updateToggleButton(id, state) {
 function getAll() {
   $('#loadModal').modal('show');
   $.get(urlBase + 'all', function(data) {
-    console.log(data);
     $('#loadModal').modal('hide');
     $('#status').html('Connecting...');
     updateToggleButton('relay1', data.relay1);
@@ -100,7 +99,6 @@ function setMode(id, value) {
   }
   $.jpost(urlBase + 'toggle', datatosend).then(function(data) {
     var value = data[id];
-    console.log(data, id, value);
     updateToggleButton(id, value);
   });
 }
