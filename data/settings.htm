@@ -19,14 +19,14 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="/">WiFi Relay</a>
+        <a class="navbar-brand" href="/index.htm">WiFi Relay</a>
       </div>
       <div id="navbar" class="navbar-collapse collapse">
         <ul class="nav navbar-nav navbar-right">
-          <li><a href="/">Dashboard</a></li>
-          <li class="btn-primary active"><a href="/settings">Settings</a></li>
+          <li><a href="/index.htm">Dashboard</a></li>
+          <li class="btn-primary active"><a href="/settings.htm">Settings</a></li>
           <li>
-            <a href="" type="button" data-toggle="tooltip" title="Refresh relay states">
+            <a href="#" type="button" data-toggle="tooltip" title="Refresh relay states">
               <span class="glyphicon glyphicon-refresh" id="btnRefresh"></span>
             </a>
           </li>
@@ -35,14 +35,41 @@
     </div><!-- container -->
   </nav><!-- navbar -->
   <div class="container">
-    <div class="alert alert-warning"><strong>Warning!</strong> Settings will take effect when the device is rebooted.
+    <!-- Modal -->
+    <div class="modal fade" id="updateModal" role="dialog">
+      <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Update Settings</h4>
+          </div>
+          <div class="modal-body">
+            <p>Device should reboot with new settings in 10 seconds!</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <div id="loading" style="display:none;" class="text-center">
-      <img src="images/load.gif">
-      <h5>Please wait while fetching data... <span id="loadPages"></span></h5>
+    <!-- Modal -->
+    <div class="modal fade" id="loadModal" role="dialog">
+      <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">fetching data...</h4>
+          </div>
+          <div class="modal-body">
+            <img src="images/load.gif">
+            <h5>Please wait while fetching data... <span id="loadPages"></span></h5>
+          </div>
+        </div>
+      </div>
     </div>
     <div>
       <button data-toggle="collapse" data-target="#status" id="btnRefStat" class="btn btn-link">Show Device Status</button>
+      <button data-toggle="collapse" data-target="#status" id="btnRefStat2" class="btn btn-link" style="display:none;">Hide Device Status</button>
     </div>
     <div id="status" class="row collapse">
       <div class="col-sm-6">
@@ -118,60 +145,7 @@
     </div><!-- row -->
     <br />
     <div class="row">
-      <div class="col-sm-6">
-        <div class="panel panel-primary">
-          <div class="panel-heading">WiFi Settings</div>
-          <div class="panel-body">
-            <p><span class="text-muted">Type your WiFi SSID or scan for nearby wireless networks to join.</span></p>
-            <div class="row form-group">
-              <div class="col-xs-3">
-                <label data-toggle="tooltip" title="You can run your ESP in AP Mode or Client Mode. In client mode you will need to connect to an existing WiFi network, in AP Mode ESP creates a WiFi network itself.">WiFi Mode</label>
-              </div>
-              <div class="col-xs-9">
-                <div id="wifiMode" class="btn-group btn-group-justified btn-toggle" role="group" aria-label="WiFi_Mode">
-                  <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-primary active" id="wifiModeOn" state="ap">Access Point</button>
-                  </div>
-                  <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" id="wifiModeOff" state="client">Client</button>
-                  </div>
-                </div>
-              </div>
-            </div><!-- row -->
-            <div class="row form-group" style="display:none" id="hideSSID">
-              <div class="col-xs-3">
-                <label data-toggle="tooltip" title="WiFi Network's Name">SSID</label>
-              </div>
-              <div class="col-xs-9">
-                <div class="input-group">
-                  <input class="form-control" id="inputToHide" type="text" name="ap_ssid">
-                  <select class="form-control" style="display:none;" id="ssid"></select>
-                  <span class="input-group-btn">
-                    <button id="btnScanBSSID" type="button" class="btn btn-primary">Scan</button>
-                  </span>
-                </div><!-- /input-group -->
-              </div><!-- col-9 -->
-            </div><!-- row -->
-            <div class="row form-group" style="display:none" id="hideBSSID">
-              <div class="col-xs-3">
-                <label data-toggle="tooltip" title="If you have two WiFi networks with the same SSID you may want to choose the specific one by BSSID">BSSID</label>
-              </div>
-              <div class="col-xs-9">
-                <input id="wifiBSSID" class="form-control" type="text" name="ap_bssid">
-              </div>
-            </div>
-            <div class="row form-group">
-              <div class="col-xs-3">
-                <label data-toggle="tooltip" title="WiFi Password">Password</label>
-              </div>
-              <div class="col-xs-9">
-                <input id="wifiPass" class="form-control" type="text" name="ap_passwd">
-              </div>
-            </div>
-          </div><!-- panel-body -->
-        </div><!-- panel -->
-      </div><!-- col-6 -->
-      <div class="col-sm-6">
+      <div class="col-sm-12">
         <div class="panel panel-primary">
           <div class="panel-heading">General Settings</div>
           <div class="panel-body">
@@ -195,7 +169,7 @@
             </div><!-- row -->
           </div><!-- panel-body -->
         </div><!-- panel -->
-      </div><!-- col-6 -->
+      </div><!-- col-12 -->
     </div><!-- row -->
     <br />
     <div class="row">
