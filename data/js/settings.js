@@ -7,9 +7,9 @@ $(document).ready(function() {
 $('#btnRefStat').click(function() {
   console.log('refreshStats');
   // get current stats
-  $('#loading').css('display', 'block');
+  $('#loadModal').modal('show');
   $.get(urlBase + 'settings/status', function(data) {
-    $('#loading').css('display', 'none');
+    $('#loadModal').modal('hide');
     console.log(data);
     $('#chip').text(data.chipid);
     $('#cpu').text(data.cpu + ' MHz');
@@ -45,9 +45,9 @@ $('#btnScanBSSID').click(function() {
   // clear network list before get scan for new
   $('#ssid').find('option').remove();
   // get ssids by get request and fill list again
-  $('#loading').css('display', 'block');
+  $('#loadModal').modal('show');
   $.get(urlBase + 'settings/scanwifi', function(data) {
-    $('#loading').css('display', 'none');
+    $('#loadModal').modal('hide');
     if (data.error) {
       $('#btnScanBSSID').trigger('click');
     } else {
@@ -95,19 +95,35 @@ $('#btnSaveConf').click(function() {
     wifipwd: $('#wifiPass').val(),
     hostname: $('#hostname').val(),
     adminpwd: adminpwd,
-    relay1: { type: $('#relay1Type option:selected').val(),
+    relay1: { name: $('#relay1Name').val(),
+              type: $('#relay1Type option:selected').val(),
               pin: $('#relay1Pin option:selected').val() },
-    relay2: { type: $('#relay2Type option:selected').val(),
+    relay2: { name: $('#relay2Name').val(),
+              type: $('#relay2Type option:selected').val(),
               pin: $('#relay2Pin option:selected').val() },
-    relay3: { type: $('#relay3Type option:selected').val(),
+    relay3: { name: $('#relay3Name').val(),
+              type: $('#relay3Type option:selected').val(),
               pin: $('#relay3Pin option:selected').val() },
-    relay4: { type: $('#relay4Type option:selected').val(),
-              pin: $('#relay4Pin option:selected').val() }
+    relay4: { name: $('#relay4Name').val(),
+              type: $('#relay4Type option:selected').val(),
+              pin: $('#relay4Pin option:selected').val() },
+    relay5: { name: $('#relay5Name').val(),
+              type: $('#relay5Type option:selected').val(),
+              pin: $('#relay5Pin option:selected').val() },
+    relay6: { name: $('#relay6Name').val(),
+              type: $('#relay6Type option:selected').val(),
+              pin: $('#relay6Pin option:selected').val() },
+    relay7: { name: $('#relay7Name').val(),
+              type: $('#relay7Type option:selected').val(),
+              pin: $('#relay7Pin option:selected').val() },
+    relay8: { name: $('#relay8Name').val(),
+              type: $('#relay8Type option:selected').val(),
+              pin: $('#relay8Pin option:selected').val() }
   };
   console.log(datatosend);
-  $('#loading').css('display', 'block');
+  $('#loadModal').modal('show');
   $.jpost(urlBase + 'settings/configfile', datatosend).then(function(data) {
-    $('#loading').css('display', 'none');
+    $('#loadModal').modal('hide');
     console.log(data);
   });
 });
@@ -133,9 +149,9 @@ $('#restoreSet').change(function() {
         if (json.command === 'configfile') {
           var x = confirm('File seems to be valid, do you wish to continue?');
           if (x) {
-            $('#loading').css('display', 'block');
+            $('#loadModal').modal('show');
             $.jpost(urlBase + 'settings/configfile', json).then(function(data) {
-              $('#loading').css('display', 'none');
+              $('#loadModal').modal('hide');
               console.log(data);
               alert('Device now should reboot with new settings');
               location.reload();
@@ -151,22 +167,48 @@ $('#restoreSet').change(function() {
 });
 
 function getAll() {
-  $('#loading').css('display', 'block');
+  $('#loadModal').modal('show');
   $.get(urlBase + 'settings/configfile', function(data) {
-    $('#loading').css('display', 'none');
+    $('#loadModal').modal('hide');
     console.log('listConf', data);
     $('#inputToHide').val(data.ssid);
     $('#wifiPass').val(data.wifipwd);
     $('#adminPwd').val(data.adminpwd);
     $('#hostname').val(data.hostname);
-    $("#relay1Type").val(data.relay1.type).change();
-    $("#relay1Pin").val(data.relay1.pin).change();
-    $("#relay2Type").val(data.relay2.type).change();
-    $("#relay2Pin").val(data.relay2.pin).change();
-    $("#relay3Type").val(data.relay3.type).change();
-    $("#relay3Pin").val(data.relay3.pin).change();
-    $("#relay4Type").val(data.relay4.type).change();
-    $("#relay4Pin").val(data.relay4.pin).change();
+
+    var relay1Name = (data.relay1.name ? data.relay1.name : 'Relay 1');
+    $('#relay1Name').val(relay1Name);
+    $('#relay1Type').val(data.relay1.type).change();
+    $('#relay1Pin').val(data.relay1.pin).change();
+    var relay2Name = (data.relay2.name ? data.relay2.name : 'Relay 2');
+    $('#relay2Name').val(relay2Name);
+    $('#relay2Type').val(data.relay2.type).change();
+    $('#relay2Pin').val(data.relay2.pin).change();
+    var relay3Name = (data.relay3.name ? data.relay3.name : 'Relay 3');
+    $('#relay3Name').val(relay3Name);
+    $('#relay3Type').val(data.relay3.type).change();
+    $('#relay3Pin').val(data.relay3.pin).change();
+    var relay4Name = (data.relay4.name ? data.relay4.name : 'Relay 4');
+    $('#relay4Name').val(relay4Name);
+    $('#relay4Type').val(data.relay4.type).change();
+    $('#relay4Pin').val(data.relay4.pin).change();
+    var relay5Name = (data.relay5.name ? data.relay5.name : 'Relay 5');
+    $('#relay5Name').val(relay5Name);
+    $('#relay5Type').val(data.relay5.type).change();
+    $('#relay5Pin').val(data.relay5.pin).change();
+    var relay6Name = (data.relay6.name ? data.relay6.name : 'Relay 6');
+    $('#relay6Name').val(relay6Name);
+    $('#relay6Type').val(data.relay6.type).change();
+    $('#relay6Pin').val(data.relay6.pin).change();
+    var relay7Name = (data.relay7.name ? data.relay7.name : 'Relay 7');
+    $('#relay7Name').val(relay7Name);
+    $('#relay7Type').val(data.relay7.type).change();
+    $('#relay7Pin').val(data.relay7.pin).change();
+    var relay8Name = (data.relay8.name ? data.relay8.name : 'Relay 8');
+    $('#relay8Name').val(relay8Name);
+    $('#relay8Type').val(data.relay8.type).change();
+    $('#relay8Pin').val(data.relay8.pin).change();
+
     updateToggleButton('wifiMode', data.wifimode);
     if (data.wifimode === 0) {
       $('#wifiBSSID').val(data.bssid);

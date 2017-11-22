@@ -32,9 +32,24 @@ extern "C" {
 
 #include "helper.h"
 
+// declare and initial upload file container and web server
 AsyncWebServer server(80);
 AsyncEventSource events("/events");
 DNSServer dns;
+
+struct sRelay {
+  uint8_t pin;
+  uint8_t type;
+  uint8_t state;
+  sRelay(uint8_t relayPin, uint8_t relayType = HIGH, uint8_t relayState = LOW) {
+    pin = relayPin;
+    type = relayType;
+    state = relayState;
+  }
+};
+
+// declare and initial list of default relay settings
+sRelay relay[8] = {sRelay(D5), sRelay(D6), sRelay(D7), sRelay(D8), sRelay(D3), sRelay(D4), sRelay(D2), sRelay(D1)};
 
 bool shouldReboot = false;
 bool inAPMode = false;
@@ -43,17 +58,6 @@ const char* hostName = "wifi-relay";
 const char* http_username = "admin";
 const char* http_password = "admin";
 
-struct sRelay {
-  int pin;
-  uint8_t type;
-  uint8_t state;
-  sRelay(int relayPin = -1, uint8_t relayType = 1, uint8_t relayState = LOW) {
-    pin = relayPin;
-    type = relayType;
-    state = relayState;
-  }
-};
-sRelay relay[4] = {sRelay(D5,1,LOW), sRelay(D6,1,LOW), sRelay(D7,1,LOW), sRelay(D8,1,LOW)};
 
 void setup()
 {
@@ -69,6 +73,10 @@ void setup()
   pinMode(relay[1].pin, OUTPUT);
   pinMode(relay[2].pin, OUTPUT);
   pinMode(relay[3].pin, OUTPUT);
+  pinMode(relay[4].pin, OUTPUT);
+  pinMode(relay[5].pin, OUTPUT);
+  pinMode(relay[6].pin, OUTPUT);
+  pinMode(relay[7].pin, OUTPUT);
 
   // load settings
   EEPROM.begin(512);
@@ -135,83 +143,32 @@ void setup()
   server.on("/all", HTTP_GET, [](AsyncWebServerRequest *request) {
     sendAll(request);
   });
-  // get relay1 state: GET http://wifi-relay.local/relay1
-  // set relay1 state: GET http://wifi-relay.local/relay1?value=0 or 1
-  server.on("/relay1", HTTP_GET, [](AsyncWebServerRequest *request) {
+  // get relay state: GET http://wifi-relay.local/relay?id=0
+  // set relay state: GET http://wifi-relay.local/relay?id=0&value=0 or 1
+  server.on("/relay", HTTP_GET, [](AsyncWebServerRequest *request) {
+    uint8_t idx = request->getParam("id")->value().toInt() -1;
     if (request->hasParam("value")) {
-      AsyncWebParameter* pPayload = request->getParam("value");
-      String value = pPayload->value();
-      setRelay(0, value.toInt());
+      uint8_t value = request->getParam("value")->value().toInt();
+      setRelay(idx, value);
       request->redirect("/");
     } else {
-      sendRelay(0, request);
+      sendRelay(idx, request);
     }
   });
-  // set relay1 state: POST http://wifi-relay.local/relay1 with value=0 or 1
-  server.on("/relay1", HTTP_POST, [](AsyncWebServerRequest *request) {
-    AsyncWebParameter* pPayload = request->getParam("value");
-    String value = pPayload->value();
-    setRelay(0, value.toInt());
-    sendRelay(0, request);
-  });
-  // get relay2 state: GET http://wifi-relay.local/relay2
-  // set relay2 state: GET http://wifi-relay.local/relay2?value=0 or 1
-  server.on("/relay2", HTTP_GET, [](AsyncWebServerRequest *request) {
-    if (request->hasParam("value")) {
-      AsyncWebParameter* pPayload = request->getParam("value");
-      String value = pPayload->value();
-      setRelay(1, value.toInt());
-      request->redirect("/");
-    } else {
-      sendRelay(1, request);
+  // set toggle state: POST http://wifi-relay.local/toggle with value=0 or 1
+  server.on("/toggle", HTTP_POST, [](AsyncWebServerRequest *request) {
+    String data = request->getParam("plain")->value();
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject& json = jsonBuffer.parseObject(data);
+    String cmd = json["cmd"];
+    String id = json["id"];
+    String value = json["value"];
+    if (cmd == "relay") {
+      uint8_t idx = id.substring(5).toInt() -1;
+      setRelay(idx, value.toInt());
+      sendRelay(idx, request);
     }
   });
-  // set relay2 state: POST http://wifi-relay.local/relay2 with value=0 or 1
-  server.on("/relay2", HTTP_POST, [](AsyncWebServerRequest *request) {
-    AsyncWebParameter* pPayload = request->getParam("value");
-    String value = pPayload->value();
-    setRelay(1, value.toInt());
-    sendRelay(1, request);
-  });
-  // get relay3 state: GET http://wifi-relay.local/relay3
-  // set relay3 state: GET http://wifi-relay.local/relay3?value=0 or 1
-  server.on("/relay3", HTTP_GET, [](AsyncWebServerRequest *request) {
-    if (request->hasParam("value")) {
-      AsyncWebParameter* pPayload = request->getParam("value");
-      String value = pPayload->value();
-      setRelay(2, value.toInt());
-      request->redirect("/");
-    } else {
-      sendRelay(2, request);
-    }
-  });
-  // set relay3 state: POST http://wifi-relay.local/relay3 with value=0 or 1
-  server.on("/relay3", HTTP_POST, [](AsyncWebServerRequest *request) {
-    AsyncWebParameter* pPayload = request->getParam("value");
-    String value = pPayload->value();
-    setRelay(2, value.toInt());
-    sendRelay(2, request);
-  });
-  // get relay4 state: GET http://wifi-relay.local/relay4
-  // set relay4 state: GET http://wifi-relay.local/relay4?value=0 or 1
-  server.on("/relay4", HTTP_GET, [](AsyncWebServerRequest *request) {
-    if (request->hasParam("value")) {
-      AsyncWebParameter* pPayload = request->getParam("value");
-      String value = pPayload->value();
-      setRelay(3, value.toInt());
-      request->redirect("/");
-    } else {
-      sendRelay(3, request);
-    }
-  });
-  // set relay4 state: POST http://wifi-relay.local/relay4 with value=0 or 1
-  server.on("/relay4", HTTP_POST, [](AsyncWebServerRequest *request) {
-    AsyncWebParameter* pPayload = request->getParam("value");
-    String value = pPayload->value();
-    setRelay(3, value.toInt());
-    sendRelay(3, request);
-  });
-
   // Simple Firmware Update Handler
   server.on("/settings/update", HTTP_POST, [](AsyncWebServerRequest * request) {
     shouldReboot = !Update.hasError();
@@ -457,11 +414,23 @@ bool loadConfiguration() {
   relay[2].pin = json["relay3"]["pin"];
   relay[3].type = json["relay4"]["type"];
   relay[3].pin = json["relay4"]["pin"];
+  relay[4].type = json["relay5"]["type"];
+  relay[4].pin = json["relay5"]["pin"];
+  relay[5].type = json["relay6"]["type"];
+  relay[5].pin = json["relay6"]["pin"];
+  relay[6].type = json["relay7"]["type"];
+  relay[6].pin = json["relay7"]["pin"];
+  relay[7].type = json["relay8"]["type"];
+  relay[7].pin = json["relay8"]["pin"];
   
   pinMode(relay[0].pin, OUTPUT);
   pinMode(relay[1].pin, OUTPUT);
   pinMode(relay[2].pin, OUTPUT);
   pinMode(relay[3].pin, OUTPUT);
+  pinMode(relay[4].pin, OUTPUT);
+  pinMode(relay[5].pin, OUTPUT);
+  pinMode(relay[6].pin, OUTPUT);
+  pinMode(relay[7].pin, OUTPUT);
   loadSettings();
 
   const char * ssid = json["ssid"];
@@ -534,23 +503,77 @@ void loadSettings()
   relay[1].state = EEPROM.read(1);
   relay[2].state = EEPROM.read(2);
   relay[3].state = EEPROM.read(3);
+  relay[4].state = EEPROM.read(4);
+  relay[5].state = EEPROM.read(5);
+  relay[6].state = EEPROM.read(6);
+  relay[7].state = EEPROM.read(7);
   // set relay states
   digitalWrite(relay[0].pin, relay[0].state);
   digitalWrite(relay[1].pin, relay[1].state);
   digitalWrite(relay[2].pin, relay[2].state);
   digitalWrite(relay[3].pin, relay[3].state);
+  digitalWrite(relay[4].pin, relay[4].state);
+  digitalWrite(relay[5].pin, relay[5].state);
+  digitalWrite(relay[6].pin, relay[6].state);
+  digitalWrite(relay[7].pin, relay[7].state);
 }
 
 // send all relay states back to website
 void sendAll(AsyncWebServerRequest *request)
 {
   AsyncResponseStream *response = request->beginResponseStream("text/json");
+  // try to open config.json file
+  File configFile = SPIFFS.open("/config.json", "r");
+  if (!configFile) {
+    Serial.println(F("[WARN] Failed to open config file"));
+  }
+  size_t size = configFile.size();
+  // Allocate a buffer to store contents of the file.
+  std::unique_ptr<char[]> buf(new char[size]);
+  // We don't use String here because ArduinoJson library requires the input
+  // buffer to be mutable. If you don't use ArduinoJson, you may as well
+  // use configFile.readString instead.
+  configFile.readBytes(buf.get(), size);
   DynamicJsonBuffer jsonBuffer;
-  JsonObject &root = jsonBuffer.createObject();
-  root["relay1"] = relay[0].state;
-  root["relay2"] = relay[1].state;
-  root["relay3"] = relay[2].state;
-  root["relay4"] = relay[3].state;
+  JsonObject& json = jsonBuffer.parseObject(buf.get());
+  if (!json.success()) {
+    Serial.println(F("[WARN] Failed to parse config file"));
+  }
+  DynamicJsonBuffer jsonBuffer2;
+  JsonObject &root = jsonBuffer2.createObject();
+  // create relay json objects
+  JsonObject& relay1 = jsonBuffer2.createObject();
+  relay1["name"] = json["relay1"]["name"];
+  relay1["state"] = relay[0].state;
+  root.set("relay1", relay1);
+  JsonObject& relay2 = jsonBuffer2.createObject();
+  relay2["name"] = json["relay2"]["name"];
+  relay2["state"] = relay[1].state;
+  root.set("relay2", relay2);
+  JsonObject& relay3 = jsonBuffer2.createObject();
+  relay3["name"] = json["relay3"]["name"];
+  relay3["state"] = relay[2].state;
+  root.set("relay3", relay3);
+  JsonObject& relay4 = jsonBuffer2.createObject();
+  relay4["name"] = json["relay4"]["name"];
+  relay4["state"] = relay[3].state;
+  root.set("relay4", relay4);
+  JsonObject& relay5 = jsonBuffer2.createObject();
+  relay5["name"] = json["relay5"]["name"];
+  relay5["state"] = relay[4].state;
+  root.set("relay5", relay5);
+  JsonObject& relay6 = jsonBuffer2.createObject();
+  relay6["name"] = json["relay6"]["name"];
+  relay6["state"] = relay[5].state;
+  root.set("relay6", relay6);
+  JsonObject& relay7 = jsonBuffer2.createObject();
+  relay7["name"] = json["relay7"]["name"];
+  relay7["state"] = relay[6].state;
+  root.set("relay7", relay7);
+  JsonObject& relay8 = jsonBuffer2.createObject();
+  relay8["name"] = json["relay8"]["name"];
+  relay8["state"] = relay[7].state;
+  root.set("relay8", relay8);
   root.printTo(*response);
   request->send(response);
 }
@@ -569,8 +592,10 @@ void sendRelay(uint8_t idx, AsyncWebServerRequest *request)
 // set current relay state and store it in EEPROM
 void setRelay(uint8_t idx, uint8_t value)
 {
+  uint8_t lowValue  = (relay[idx].type == 0 ? HIGH : LOW);
+  uint8_t highValue = (relay[idx].type == 0 ? LOW  : HIGH);
   relay[idx].state = (value == 0 ? LOW : HIGH);
-  digitalWrite(relay[idx].pin, relay[idx].state);
+  digitalWrite(relay[idx].pin, (relay[idx].state == LOW ? lowValue : highValue));
   EEPROM.write(idx, relay[idx].state);
   EEPROM.commit();
 }
@@ -618,4 +643,3 @@ void sendStatus(AsyncWebServerRequest *request)
   root.printTo(*response);
   request->send(response);
 }
-

@@ -54,11 +54,7 @@ $('.btn-toggle').click(function() {
 });
 
 function handleToggleButton(id, state) {
-  if (id.includes('relay')) {
-    setRelay(id, state);
-  } else {
-    console.log(id);
-  }
+  setMode(id, state);
 }
 
 function updateToggleButton(id, state) {
@@ -71,33 +67,38 @@ function updateToggleButton(id, state) {
   }
 }
 
-function getAll() {
-  $.get(urlBase + 'all', function(data) {
-    console.log(data);
-    $('#status').html('Connecting...');
-    updateToggleButton('relay1', data.relay1);
-    updateToggleButton('relay2', data.relay2);
-    updateToggleButton('relay3', data.relay3);
-    updateToggleButton('relay4', data.relay4);
-    $('#status').html('Ready');
+function setMode(id, value) {
+  var datatosend;
+  if (id.includes('relay')) {
+    datatosend = {cmd: 'relay', id: id, value: value};
+  }
+  $.jpost(urlBase + 'toggle', datatosend).then(function(data) {
+    var value = data[id];
+    updateToggleButton(id, value);
   });
 }
 
-function setRelay(id, value) {
-  $.post(urlBase + id + '?value=' + value, function(data) {
-    console.log(data);
-    var value = 0;
-    if (id == 'relay1')
-      value = data.relay1;
-    else if (id == 'relay2')
-      value = data.relay2;
-    else if (id == 'relay3')
-      value = data.relay3;
-    else if (id == 'relay4')
-      value = data.relay4;
-    updateToggleButton(id, value);
-    var state = (value == 1 ? 'On' : 'Off');
-    $('#state').attr('style', 'display:block');
-    $('#state').html('Set ' + id + ': ' + state);
+function getAll() {
+  $('#loadModal').modal('show');
+  $.get(urlBase + 'all', function(data) {
+    $('#loadModal').modal('hide');
+    $('#status').html('Connecting...');
+    $('#relay1Name').text(data.relay1.name);
+    $('#relay2Name').text(data.relay2.name);
+    $('#relay3Name').text(data.relay3.name);
+    $('#relay4Name').text(data.relay4.name);
+    $('#relay5Name').text(data.relay5.name);
+    $('#relay6Name').text(data.relay6.name);
+    $('#relay7Name').text(data.relay7.name);
+    $('#relay8Name').text(data.relay8.name);
+    updateToggleButton('relay1', data.relay1.state);
+    updateToggleButton('relay2', data.relay2.state);
+    updateToggleButton('relay3', data.relay3.state);
+    updateToggleButton('relay4', data.relay4.state);
+    updateToggleButton('relay5', data.relay5.state);
+    updateToggleButton('relay3', data.relay6.state);
+    updateToggleButton('relay4', data.relay7.state);
+    updateToggleButton('relay5', data.relay8.state);
+    $('#status').html('Ready');
   });
 }
