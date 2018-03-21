@@ -33,7 +33,7 @@ $('#btnRefStat').click(function() {
 
 $('#ssid').change(function() {
   console.log('ssid changed');
-  $('#wifiBSSID').val($('#ssid option:selected').val());
+  $('#wifiBSSID').val($('#ssid option:selected').attr('bssidvalue'));
 });
 
 $('#btnScanBSSID').click(function() {
